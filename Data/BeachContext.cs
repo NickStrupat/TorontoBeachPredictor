@@ -2,7 +2,7 @@
 
 namespace TorontoBeachPredictor.Data
 {
-    public class Context : DbContext
+    public class BeachContext : DbContext
     {
         public DbSet<Beach> Beaches { get; set; }
         public DbSet<BeachSample> BeachSamples { get; set; }

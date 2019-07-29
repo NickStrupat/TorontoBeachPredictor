@@ -19,13 +19,14 @@ namespace TorontoBeachPredictor.Service
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            await Initialize(stoppingToken);
+            await InitializeBeaches(stoppingToken);
+            await InitializeWeather(stoppingToken);
             while (!stoppingToken.IsCancellationRequested)
             {
                 logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
                 //await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
 
-                using var context = new Context();
+                using var context = new BeachContext();
                 var mostRecent = context.BeachSamples.Max(x => x.PublishDate);
                 var (beaches, beachSamples) = await Toronto.GetRange(mostRecent, DateTime.Today, stoppingToken);
 
@@ -43,30 +44,33 @@ namespace TorontoBeachPredictor.Service
             }
         }
 
-        private async Task Initialize(CancellationToken cancellationToken)
+        private async Task InitializeBeaches(CancellationToken cancellationToken)
         {
-            using var context = new Context();
-            var databaseWasCreated = await context.Database.EnsureCreatedAsync(cancellationToken);
-            if (!databaseWasCreated)
-                return;
-
-            var (beaches, beachSamples) = await Toronto.GetAll(cancellationToken);
-            context.Beaches.AddRange(GetBeaches(beaches));
-            context.BeachSamples.AddRange(GetBeachSamples(beachSamples));
-            await context.SaveChangesAsync(cancellationToken);
+            using var context = new BeachContext();
+            await context.Database.EnsureCreatedAsync(cancellationToken);
+            var shouldNotSeed = await context.Beaches.AnyAsync() || await context.BeachSamples.AnyAsync();
+            if (!shouldNotSeed)
+            {
+                var (beaches, beachSamples) = await Toronto.GetAll(cancellationToken);
+                context.Beaches.AddRange(GetBeaches(beaches));
+                context.BeachSamples.AddRange(GetBeachSamples(beachSamples));
+                await context.SaveChangesAsync(cancellationToken);
+            }
         }
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
+        private async Task InitializeWeather(CancellationToken cancellationToken)
         {
-            await base.StartAsync(cancellationToken);
-            logger.LogInformation("Worker starting at: {time}", DateTimeOffset.Now);
-            //return Initialize(cancellationToken);
-        }
-
-        public override Task StopAsync(CancellationToken cancellationToken)
-        {
-            logger.LogInformation("Worker stopping at: {time}", DateTimeOffset.Now);
-            return base.StopAsync(cancellationToken);
+            using var context = new WeatherContext();
+            await context.Database.EnsureCreatedAsync(cancellationToken);
+            var shouldNotSeed = await context.WeatherStations.AnyAsync() || await context.WeatherSamples.AnyAsync();
+            if (!shouldNotSeed)
+            {
+                var weatherStations = await Canada.GetAllStations();
+                var weatherSamples = await Canada.GetWeatherSamples(weatherStations.Single(x => x.Name == "TORONTO CITY").StationId.Value, new DateTime(2007, 06, 01), DateTime.Today, cancellationToken);
+                context.WeatherStations.AddRange(GetWeatherStations(weatherStations));
+                context.WeatherSamples.AddRange(GetWeatherSamples(weatherSamples));
+                await context.SaveChangesAsync(cancellationToken);
+            }
         }
 
         private static IEnumerable<Beach> GetBeaches(Toronto.Beach[] beaches) =>
@@ -97,6 +101,41 @@ namespace TorontoBeachPredictor.Service
                 PublishDate = beachSample.PublishDate.Value,
                 EColiCount = beachSample.EColiCount.Value,
                 BeachStatus = Enum.Parse<BeachStatus>(beachSample.BeachStatus)
+            };
+
+        private static IEnumerable<WeatherStation> GetWeatherStations(Canada.WeatherStation[] weatherStations) =>
+            from weatherStation in weatherStations
+            where weatherStation.StationId != null
+            where weatherStation.Province != null
+            where weatherStation.Name != null
+            where weatherStation.Latitude != null
+            where weatherStation.Longitude != null
+            select new WeatherStation
+            {
+                Name = weatherStation.Name,
+                StationId = weatherStation.StationId.Value,
+                Latitude = weatherStation.Latitude.Value,
+                Longitude = weatherStation.Longitude.Value,
+                ElevationInMetres = weatherStation.ElevationInMetres.Value
+            };
+
+        private static IEnumerable<WeatherSample> GetWeatherSamples(Canada.WeatherSample[] weatherSamples) =>
+            from weatherSample in weatherSamples
+            where weatherSample.MaximumTemperatureInC != null
+            where weatherSample.MinimumTemperatureInC != null
+            where weatherSample.MeanTemperatureInC != null
+            where weatherSample.HeatingDegreeDaysInC != null
+            where weatherSample.CoolingDegreeDaysInC != null
+            where weatherSample.TotalRainInMm != null
+            select new WeatherSample
+            {
+                Date = weatherSample.Date,
+                MaximumTemperatureInC = weatherSample.MaximumTemperatureInC.Value,
+                MinimumTemperatureInC = weatherSample.MinimumTemperatureInC.Value,
+                MeanTemperatureInC = weatherSample.MeanTemperatureInC.Value,
+                HeatingDegreeDaysInC = weatherSample.HeatingDegreeDaysInC.Value,
+                CoolingDegreeDaysInC = weatherSample.CoolingDegreeDaysInC.Value,
+                TotalRainInMm = weatherSample.TotalRainInMm.Value,
             };
     }
 }
