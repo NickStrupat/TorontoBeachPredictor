@@ -12,7 +12,7 @@ namespace TorontoBeachPredictor.Data
         public Double MeanTemperatureInC { get; set; }
         public Double HeatingDegreeDaysInC { get; set; }
         public Double CoolingDegreeDaysInC { get; set; }
-        public Double TotalRainInMm { get; set; }
+        public Double TotalPrecipitationInMm { get; set; }
 
         public Int32 WeatherStationId { get; set; }
 

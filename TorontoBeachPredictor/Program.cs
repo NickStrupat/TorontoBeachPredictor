@@ -31,9 +31,9 @@ namespace TorontoBeachPredictor
 				from beachSample in beachSamples
 				from weatherSample in weatherSamples
 				where beachSample.SampleDate == weatherSample.Date
-				group (weatherSample.Date, weatherSample.MaximumTemperatureInC, weatherSample.MinimumTemperatureInC, beachSample.EColiCount) by beachSample.BeachId into grouping
+				group (weatherSample.Date, weatherSample.MaximumTemperatureInC, weatherSample.MinimumTemperatureInC, weatherSample.TotalPrecipitationInMm, beachSample.EColiCount) by beachSample.BeachId into grouping
 				select grouping;
-			var what = joined.ToDictionary(x => x.Key, x => x.OrderByDescending(y => y.Date).ToArray());
+			var what = joined.ToDictionary(x => x.Key, x => x.OrderByDescending(y => y.Date).GroupBy(y => y.Date.Year).ToDictionary(y => y.Key));
         }
     }
 }

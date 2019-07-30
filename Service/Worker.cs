@@ -146,7 +146,7 @@ namespace TorontoBeachPredictor.Service
 				MeanTemperatureInC = weatherSample.MeanTemperatureInC.Value,
 				HeatingDegreeDaysInC = weatherSample.HeatingDegreeDaysInC.Value,
 				CoolingDegreeDaysInC = weatherSample.CoolingDegreeDaysInC.Value,
-				TotalRainInMm = weatherSample.TotalRainInMm.GetValueOrDefault(),
+				TotalPrecipitationInMm = weatherSample.TotalPrecipitationInMm.GetValueOrDefault(),
 				WeatherStationId = weatherStationId
 			};
 	}

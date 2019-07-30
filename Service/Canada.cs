@@ -32,7 +32,7 @@ namespace TorontoBeachPredictor.Service
             public Double? MeanTemperatureInC;
             public Double? HeatingDegreeDaysInC;
             public Double? CoolingDegreeDaysInC;
-            public Double? TotalRainInMm;
+            public Double? TotalPrecipitationInMm;
 
             public override String ToString() => JsonConvert.SerializeObject(this, Formatting.None);
         }
@@ -98,7 +98,7 @@ namespace TorontoBeachPredictor.Service
                     MeanTemperatureInC = stationData.Element("meantemp")?.Value.TryParse<Double>(Double.TryParse),
                     HeatingDegreeDaysInC = stationData.Element("heatdegdays")?.Value.TryParse<Double>(Double.TryParse),
                     CoolingDegreeDaysInC = stationData.Element("cooldegdays")?.Value.TryParse<Double>(Double.TryParse),
-                    TotalRainInMm = stationData.Element("totalrain")?.Value.TryParse<Double>(Double.TryParse),
+                    TotalPrecipitationInMm = stationData.Element("totalprecipitation")?.Value.TryParse<Double>(Double.TryParse),
                 };
 
             return weatherDataQuery.ToArray();
