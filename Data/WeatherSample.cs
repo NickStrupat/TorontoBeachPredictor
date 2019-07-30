@@ -15,7 +15,6 @@ namespace TorontoBeachPredictor.Data
         public Double TotalRainInMm { get; set; }
 
         public Int32 WeatherStationId { get; set; }
-        public WeatherStation WeatherStation { get; set; }
 
         public override String ToString() => JsonConvert.SerializeObject(this, Formatting.None);
     }

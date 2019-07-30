@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TorontoBeachPredictor
+namespace TorontoBeachPredictor.Service
 {
     public class UnitOfLength
     {

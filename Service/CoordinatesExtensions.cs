@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TorontoBeachPredictor
+namespace TorontoBeachPredictor.Service
 {
     static class CoordinatesExtensions {
         public static Double DistanceTo(this (Double Latitude, Double Longitude) baseCoordinates, (Double Latitude, Double Longitude) targetCoordinates, UnitOfLength unitOfLength)
