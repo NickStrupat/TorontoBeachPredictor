@@ -22,7 +22,7 @@ namespace TorontoBeachPredictor
         static async Task Main(String[] args)
         {
 	        var ints = new[] { 1, 2, 3, 4, 5, 6, 7 };
-	        var ts = GetTimeSeries(ints, 3);
+	        var ts = GetTimeSeries(ints, 3).Select().Select(x => x.ToArray()).ToArray();
 
             using var context = new Context();
             var beaches = await context.Beaches.ToArrayAsync(AsyncProgram.CancellationToken);
