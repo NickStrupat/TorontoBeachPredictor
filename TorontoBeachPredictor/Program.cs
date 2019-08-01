@@ -22,7 +22,8 @@ namespace TorontoBeachPredictor
         static async Task Main(String[] args)
         {
 	        var ints = new[] { 1, 2, 3, 4, 5, 6, 7 };
-	        var ts = GetTimeSeries(ints, 3).Select().Select(x => x.ToArray()).ToArray();
+	        var ts = ints.GetTimeSeries(3).Select().Select(x => x.ToArray()).ToArray();
+            var ordered = ints.OrderByDescending(x => x).ToArray();
 
             using var context = new Context();
             var beaches = await context.Beaches.ToArrayAsync(AsyncProgram.CancellationToken);
@@ -36,18 +37,7 @@ namespace TorontoBeachPredictor
 				where beachSample.SampleDate == weatherSample.Date
 				group (weatherSample.Date, weatherSample.MaximumTemperatureInC, weatherSample.MinimumTemperatureInC, weatherSample.TotalPrecipitationInMm, beachSample.EColiCount) by beachSample.BeachId into grouping
 				select grouping;
-			var what = joined.ToDictionary(x => x.Key, x => x.OrderBy(y => y.Date).GroupBy(y => y.Date.Year).ToDictionary(y => y.Key, y => GetTimeSeries(y.ToArray(), 5)));
+			var what = joined.ToDictionary(x => x.Key, x => x.OrderBy(y => y.Date).GroupBy(y => y.Date.Year).ToDictionary(y => y.Key, y => y.ToArray().GetTimeSeries(5)));
         }
-
-		static T[,] GetTimeSeries<T>(T[] all, UInt32 daysBackInTime)
-		{
-			if (all.Length <= daysBackInTime)
-				return null;
-			var timeSeries = new T[all.Length - daysBackInTime, 1 + daysBackInTime];
-			for (var i = 0; i != timeSeries.GetLength(0); i++)
-			for (var j = 0; j != timeSeries.GetLength(1); j++)
-				timeSeries[i, j] = all[daysBackInTime + i - j];
-			return timeSeries;
-		}
     }
 }
