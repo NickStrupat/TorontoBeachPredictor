@@ -24,7 +24,6 @@ namespace TorontoBeachPredictor.Service
 			while (!stoppingToken.IsCancellationRequested)
 			{
 				logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-				await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
 
 				using var context = new Context();
 				var mostRecent = context.BeachSamples.Max(x => x.PublishDate);
@@ -41,6 +40,7 @@ namespace TorontoBeachPredictor.Service
 				context.BeachSamples.AddRange(newBeachSamples);
 
 				await context.SaveChangesAsync(stoppingToken);
+				await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
 			}
 		}
 

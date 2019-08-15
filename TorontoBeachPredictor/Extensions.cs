@@ -6,27 +6,33 @@ using System.Collections.Generic;
 
 namespace TorontoBeachPredictor
 {
-    public static class Extensions
-    {
-        public static IEnumerable<IEnumerable<T>> Select<T>(this T[,] array) {
+	public static class Extensions
+	{
+		public static IEnumerable<IEnumerable<T>> Select<T>(this T[,] array)
+		{
+			if (array == null)
+				throw new ArgumentNullException(nameof(array));
 			for (var i = 0; i != array.GetLength(0); i++)
-                yield return GetRow(i);
+				yield return GetRow(i);
 
-            IEnumerable<T> GetRow(Int32 i) {
-			    for (var j = 0; j != array.GetLength(1); j++)
-                    yield return array[i, j];
-            }
-        }
+			IEnumerable<T> GetRow(Int32 i)
+			{
+				for (var j = 0; j != array.GetLength(1); j++)
+					yield return array[i, j];
+			}
+		}
 
-        public static T[,] GetTimeSeries<T>(this T[] all, UInt32 daysBackInTime)
-        {
-            if (all.Length <= daysBackInTime)
-                return null;
-            var timeSeries = new T[all.Length - daysBackInTime, 1 + daysBackInTime];
-            for (var i = 0; i != timeSeries.GetLength(0); i++)
-                for (var j = 0; j != timeSeries.GetLength(1); j++)
-                    timeSeries[i, j] = all[daysBackInTime + i - j];
-            return timeSeries;
-        }
-    }
+		public static T[,] GetTimeSeries<T>(this T[] all, UInt32 daysBackInTime)
+		{
+			if (all == null)
+				throw new ArgumentNullException(nameof(all));
+			if (all.Length <= daysBackInTime)
+				return new T[0, 0];
+			var timeSeries = new T[all.Length - daysBackInTime, 1 + daysBackInTime];
+			for (var i = 0; i != timeSeries.GetLength(0); i++)
+				for (var j = 0; j != timeSeries.GetLength(1); j++)
+					timeSeries[i, j] = all[daysBackInTime + i - j];
+			return timeSeries;
+		}
+	}
 }
