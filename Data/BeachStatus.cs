@@ -1,4 +1,8 @@
 ﻿namespace TorontoBeachPredictor.Data
 {
-    public enum BeachStatus { Safe, Unsafe }
+	public enum BeachStatus
+	{
+		Safe,
+		Unsafe
+	}
 }
