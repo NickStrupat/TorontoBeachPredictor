@@ -27,7 +27,7 @@ namespace TorontoBeachPredictor.Service
 
 				using var context = new Context();
 				var mostRecent = context.BeachSamples.Max(x => x.PublishDate);
-				var (beaches, beachSamples) = await Toronto.GetRange(mostRecent, DateTime.Today, stoppingToken);
+				var (beaches, beachSamples) = await TorontoBeachWaterQuality.GetRange(mostRecent, DateTime.Today, stoppingToken);
 
 				var existingBeaches = await context.Beaches.ToArrayAsync(stoppingToken);
 				var currentBeaches = GetBeaches(beaches);
@@ -51,7 +51,7 @@ namespace TorontoBeachPredictor.Service
 			var shouldNotSeed = await context.Beaches.AnyAsync(cancellationToken) || await context.BeachSamples.AnyAsync(cancellationToken);
 			if (!shouldNotSeed)
 			{
-				var (beaches, beachSamples) = await Toronto.GetAll(cancellationToken);
+				var (beaches, beachSamples) = await TorontoBeachWaterQuality.GetAll(cancellationToken);
 				context.Beaches.AddRange(GetBeaches(beaches));
 				context.BeachSamples.AddRange(GetBeachSamples(beachSamples));
 				await context.SaveChangesAsync(cancellationToken);
@@ -67,7 +67,7 @@ namespace TorontoBeachPredictor.Service
 			{
 				var averageLatitude = await context.Beaches.AverageAsync(x => x.Latitude, cancellationToken);
 				var averageLongitude = await context.Beaches.AverageAsync(x => x.Longitude, cancellationToken);
-				var weatherStations = await Canada.GetAllStations();
+				var weatherStations = await EnvironmentCanada.GetAllStations();
 				var nearbyWeatherStations =
 					weatherStations
 					.Where(x => (averageLatitude, averageLongitude).DistanceTo((x.Latitude.GetValueOrDefault(), x.Longitude.GetValueOrDefault()), UnitOfLength.Kilometers) < 5)
@@ -78,14 +78,14 @@ namespace TorontoBeachPredictor.Service
 
 				foreach (var weatherStation in nearbyWeatherStations)
 				{
-					var weatherSamples = await Canada.GetWeatherSamples(weatherStation.StationId.Value, new DateTime(2007, 06, 01), DateTime.Today, cancellationToken);
+					var weatherSamples = await EnvironmentCanada.GetWeatherSamples(weatherStation.StationId.Value, new DateTime(2007, 06, 01), DateTime.Today, cancellationToken);
 					context.WeatherSamples.AddRange(GetWeatherSamples(weatherSamples, weatherStation.StationId.GetValueOrDefault()));
 					await context.SaveChangesAsync(cancellationToken);
 				}
 			}
 		}
 
-		private static IEnumerable<Beach> GetBeaches(Toronto.Beach[] beaches) =>
+		private static IEnumerable<Beach> GetBeaches(TorontoBeachWaterQuality.Beach[] beaches) =>
 			from beach in beaches
 			where beach.Id != null
 			where beach.Name != null
@@ -99,7 +99,7 @@ namespace TorontoBeachPredictor.Service
 				Longitude = beach.Longitude.Value
 			};
 
-		private static IEnumerable<BeachSample> GetBeachSamples(Toronto.BeachSample[] beachSamples) =>
+		private static IEnumerable<BeachSample> GetBeachSamples(TorontoBeachWaterQuality.BeachSample[] beachSamples) =>
 			from beachSample in beachSamples
 			where beachSample.BeachId != null
 			where beachSample.SampleDate != null
@@ -115,7 +115,7 @@ namespace TorontoBeachPredictor.Service
 				BeachStatus = Enum.Parse<BeachStatus>(beachSample.BeachStatus)
 			};
 
-		private static IEnumerable<WeatherStation> GetWeatherStations(Canada.WeatherStation[] weatherStations) =>
+		private static IEnumerable<WeatherStation> GetWeatherStations(EnvironmentCanada.WeatherStation[] weatherStations) =>
 			from weatherStation in weatherStations
 			where weatherStation.StationId != null
 			where weatherStation.Province != null
@@ -131,7 +131,7 @@ namespace TorontoBeachPredictor.Service
 				ElevationInMetres = weatherStation.ElevationInMetres.Value
 			};
 
-		private static IEnumerable<WeatherSample> GetWeatherSamples(Canada.WeatherSample[] weatherSamples, Int32 weatherStationId) =>
+		private static IEnumerable<WeatherSample> GetWeatherSamples(EnvironmentCanada.WeatherSample[] weatherSamples, Int32 weatherStationId) =>
 			from weatherSample in weatherSamples
 			where weatherSample.MaximumTemperatureInC != null
 			where weatherSample.MinimumTemperatureInC != null
